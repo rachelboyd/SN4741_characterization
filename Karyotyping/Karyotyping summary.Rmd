@@ -1,0 +1,52 @@
+---
+title: "Karyotyping SN4741s"
+author: "Rachel Boyd"
+date: "November 11, 2022"
+output: pdf_document
+---
+
+Load packages & read in the count information:
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+
+setwd("C:/Users/rboyd25/OneDrive - Johns Hopkins/Documents/Hopkins/McCallion/Papers/SN4741/Karyotyping")
+
+Percent <- read.table("KARYOTYPE_data.txt", header = T)
+as_tibble(Percent)
+
+#Format Dataset for Plotting
+Percent$Count[Percent$Count==0] <- NA
+Percent$Copies <- as.factor(Percent$Copies)
+Percent$Chr <- as.factor(Percent$Chr)
+```
+
+Graph:
+```{r}
+karyotype <- Percent %>% filter(!is.na(Count)) %>% 
+  mutate(Chr = fct_relevel(Chr,
+  "1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","X")) %>% 
+  mutate(Copies = fct_relevel(Copies,"6","5","4","3","2","1")) %>%
+  ggplot(aes(x=Chr,y=Count, fill=Copies)) +
+  geom_col() + 
+  scale_fill_manual(values=c("#ce001bff","#e14b31","#de6e56", "#e1a692","#e2e2e2", "#2c9799ff")) +
+  coord_flip() + 
+  labs(x="Chromosome", y="Karyotype Frequency", fill="Chromosome Copies")+
+  theme_classic() +
+  theme(legend.direction = "horizontal",
+        legend.position = "top",
+        panel.border = element_rect(color = "black", fill = "transparent",size=2),
+        axis.text.x = element_text(size=18),
+        axis.text.y = element_text(size = 18),
+        axis.title.y = element_text(size = 18),
+        axis.title.x=element_text(size=18),
+        legend.text = element_text(size=18),
+        legend.title = element_text(size=18)) +
+  guides(fill = guide_legend(nrow = 1, reverse = T))
+
+ggsave('karyotype.pdf', width = 7, height = 6, karyotype, bg='transparent')
+```
+
+
+
