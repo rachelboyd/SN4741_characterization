@@ -1,0 +1,63 @@
+Term	pval	Score	facet	bin_pval	qval
+Immature Neurons[16/136]	4.05177E-05	35.91	cellUP	< 0.0001	0.007050081
+Endothelial Cells[22/246]	0.000116875	23.75	cellUP	< 0.001	0.010168127
+Oligodendrocytes[17/178]	0.000314657	22.66	cellUP	< 0.001	0.018250127
+Urothelial Cells[11/106]	0.001790153	19.39	cellUP	< 0.005	0.067036719
+Retinal Progenitor Cells[11/112]	0.002774042	16.97	cellUP	< 0.005	0.067036719
+Trophoblast Stem Cells[10/99]	0.003467417	16.83	cellUP	< 0.005	0.067036719
+Satellite Glial Cells[11/114]	0.003185126	16.25	cellUP	< 0.005	0.067036719
+Beta Cells[13/145]	0.002709195	15.43	cellUP	< 0.005	0.067036719
+Dopaminergic Neurons[11/119]	0.004429161	14.61	cellUP	< 0.005	0.07006128
+Adrenergic Neurons[10/106]	0.005645412	14.26	cellUP	< 0.01	0.081858471
+GABAergic Neurons[9/113]	0.023474971	8.57	cellUP	< 0.05	0.184310257
+Glutaminergic Neurons[8/107]	0.043527995	6.68	cellUP	< 0.05	0.229511248
+Interneurons[18/305]	0.033479542	5.64	cellUP	< 0.05	0.229511248
+Neurons[17/289]	0.038999688	5.36	cellUP	< 0.05	0.224459692
+Purkinje Neurons[10/155]	0.060261386	5.11	cellUP	NS	0.275933717
+Pluripotent Stem Cells[26/112]	1.27916E-11	154.75	cellDOWN	< 0.0001	1.41561E-09
+Epithelial Cells[37/218]	1.59058E-11	104.45	cellDOWN	< 0.0001	1.41561E-09
+Mammary Epithelial Cells[19/134]	2.05435E-05	36.06	cellDOWN	< 0.0001	0.001218915
+Trichocytes[15/103]	0.000109363	31.35	cellDOWN	< 0.001	0.004078441
+Keratinocytes[17/127]	0.000114563	28.31	cellDOWN	< 0.001	0.004078441
+Undefined Placental Cells[15/108]	0.000187927	27.90	cellDOWN	< 0.001	0.005575171
+Luminal Epithelial Cells[17/140]	0.000375037	21.99	cellDOWN	< 0.001	0.009536665
+Trophoblast Cells[16/130]	0.000473926	21.66	cellDOWN	< 0.001	0.010544856
+Airway Smooth Muscle Cells[13/99]	0.000850042	21.51	cellDOWN	< 0.001	0.012608955
+Pulmonary Vascular Smooth Muscle Cells[13/99]	0.000850042	21.51	cellDOWN	< 0.001	0.012608955
+Basal Cells[16/141]	0.001154712	17.44	cellDOWN	< 0.005	0.014681338
+Stromal Cells[13/124]	0.00634653	11.91	cellDOWN	< 0.01	0.056484119
+Trophoblast Stem Cells[10/99]	0.019780328	8.84	cellDOWN	< 0.05	0.139680314
+Hepatoblasts[11/114]	0.020402742	8.34	cellDOWN	< 0.05	0.139680314
+Fibroblasts[19/232]	0.015805636	7.44	cellDOWN	< 0.05	0.122321876
+sequestering of BMP from receptor via BMP binding[4/8]	0.000112518	239.57	upGO	< 0.001	0.16
+L-ornithine transmembrane transport[3/6]	0.000909662	184.26	upGO	< 0.001	0.25
+negative regulation of monocyte chemotaxis[3/6]	0.000909662	184.26	upGO	< 0.001	0.25
+synaptic vesicle docking[3/7]	0.001548452	127.69	upGO	< 0.005	0.25
+lens fiber cell differentiation[3/8]	0.002410018	95.17	upGO	< 0.005	0.34
+negative regulation of osteoblast proliferation[3/8]	0.002410018	95.17	upGO	< 0.005	0.34
+regulation of osteoblast proliferation[5/17]	0.000283064	89.78	upGO	< 0.001	0.16
+determination of dorsal/ventral asymmetry[2/5]	0.012525916	76.73	upGO	< 0.05	0.56
+forebrain regionalization[2/5]	0.012525916	76.73	upGO	< 0.05	0.56
+glucose-6-phosphate transport[2/5]	0.012525916	76.73	upGO	< 0.05	0.56
+defense response to tumor cell[3/10]	0.004887506	60.00	upGO	< 0.005	0.51
+neuron remodeling[3/10]	0.004887506	60.00	upGO	< 0.005	0.51
+synaptic transmission, glutamatergic[3/18]	0.026720122	19.05	upGO	< 0.05	0.63
+neuron maturation[3/18]	0.026720122	19.05	upGO	< 0.05	0.63
+synaptic transmission, cholinergic[3/19]	0.030884206	17.15	upGO	< 0.05	0.65
+synaptic transmission, dopaminergic[1/7]	0.230593292	6.42	upGO	NS	0.84
+dopaminergic neuron differentiation[1/20]	0.52725877	0.88	upGO	NS	0.84
+microtubule cytoskeleton organization involved in mitosis[44/128]	2.70024E-26	641.86	downGO	< 0.0001	7.06922E-23
+centromere complex assembly[16/37]	3.2279E-12	408.43	downGO	< 0.0001	2.11266E-09
+mitotic spindle organization[44/157]	3.23693E-22	400.41	downGO	< 0.0001	4.23714E-19
+regulation of attachment of spindle microtubules to kinetochore[44722]	2.07709E-06	393.80	downGO	< 0.0001	0.000247174
+sister chromatid segregation[14/34]	1.65898E-10	318.71	downGO	< 0.0001	8.6864E-08
+mitotic sister chromatid segregation[30/102]	3.28804E-16	304.69	downGO	< 0.0001	2.86936E-13
+negative regulation of mitotic metaphase/anaphase transition[10/22]	2.25054E-08	295.56	downGO	< 0.0001	5.35628E-06
+chromatin remodeling at centromere[13/32]	9.22202E-10	287.50	downGO	< 0.0001	4.02388E-07
+protein localization to chromosome, centromeric region[8/17]	4.34089E-07	261.76	downGO	< 0.0001	6.31359E-05
+CENP-A containing chromatin organization[12/30]	5.11112E-09	256.81	downGO	< 0.0001	1.67262E-06
+mitotic chromosome condensation[10/27]	2.35978E-07	180.74	downGO	< 0.0001	3.63406E-05
+regulation of metaphase/anaphase transition of cell cycle[4/8]	0.000309854	161.77	downGO	< 0.0001	0.018865044
+mitotic nuclear division[17/74]	5.30872E-08	101.13	downGO	< 0.0001	1.0691E-05
+regulation of exit from mitosis[9/39]	7.20877E-05	57.51	downGO	< 0.0001	0.005392158
+DNA replication[17/108]	1.38375E-05	42.23	downGO	< 0.0001	0.001393327

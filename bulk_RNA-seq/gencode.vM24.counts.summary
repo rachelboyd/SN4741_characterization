@@ -1,0 +1,13 @@
+Status	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_37_1.bam	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_37_2.bam	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_37_3.bam	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_37_4.bam	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_39_1.bam	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_39_2.bam	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_39_3.bam	/home-3/phook2@jhu.edu/data/PWH/sn4741_bulk/alignments/merged_bams/sorted_merged_sorted_sn4741_39_4.bam
+Assigned	73236573	57769924	137826794	86026485	86612965	167241485	142495717	99803070
+Unassigned_Unmapped	2253000	1879656	4406194	2880659	2900616	5676566	5072065	3570881
+Unassigned_MappingQuality	0	0	0	0	0	0	0	0
+Unassigned_Chimera	0	0	0	0	0	0	0	0
+Unassigned_FragmentLength	0	0	0	0	0	0	0	0
+Unassigned_Duplicate	0	0	0	0	0	0	0	0
+Unassigned_MultiMapping	16954447	13492419	32626596	20033741	17064810	33829184	28357700	20172825
+Unassigned_Secondary	0	0	0	0	0	0	0	0
+Unassigned_Nonjunction	0	0	0	0	0	0	0	0
+Unassigned_NoFeatures	2783817	2408417	5842993	3585468	4302522	8348391	7367554	5008989
+Unassigned_Overlapping_Length	0	0	0	0	0	0	0	0
+Unassigned_Ambiguity	2391543	1878742	4464367	2773548	2963036	5776109	4786564	3511402
