@@ -1,0 +1,243 @@
+---
+title: "SN4741_all"
+author: "Rachel Boyd, Paul Hook"
+output: html_document
+---
+
+Install Seurat:
+```{r, eval=F}
+library(devtools)
+devtools::install_github(repo = "satijalab/seurat", ref = "develop")
+#install glmGamPoi
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install("glmGamPoi")
+#sctransform
+devtools::install_github("satijalab/sctransform", ref = "develop")
+```
+
+Set Working Directory and Load Packages:
+```{r}
+setwd("<Z:/path/to/file>")
+library(dplyr)
+library(ggplot2)
+library(Seurat)
+library(patchwork)
+library(sctransform)
+```
+
+Load all data for 37/naive replicates:
+```{r}
+data.12B <- Read10X(data.dir = "12B_filtered_feature_bc_matrix/")
+dat.12B <- CreateSeuratObject(counts = data.12B,project = "12B")
+
+data.1C <- Read10X(data.dir = "1C_filtered_feature_bc_matrix/")
+dat.1C <- CreateSeuratObject(counts = data.1C,project = "1C")
+
+data.2C <- Read10X(data.dir = "2C_filtered_feature_bc_matrix/")
+dat.2C <- CreateSeuratObject(counts = data.2C,project = "2C")
+
+data.3C <- Read10X(data.dir = "3C_filtered_feature_bc_matrix/")
+dat.3C <- CreateSeuratObject(counts = data.3C,project = "3C")
+
+#Merging
+naive <- merge(dat.12B,y=c(dat.1C,dat.2C,dat.3C), add.cell.ids = c("12","1C","2C","3C"),project = "naive")
+
+#Removing
+rm(data.12B,data.1C,data.2C,data.3C)
+rm(dat.12B,dat.1C,dat.2C,dat.3C)
+```
+
+Load all data for 39/diff replicates:
+```{r}
+data.4C <- Read10X(data.dir = "4C_filtered_feature_bc_matrix/")
+dat.4C <- CreateSeuratObject(counts = data.4C,project = "4C")
+
+data.5C <- Read10X(data.dir = "5C_filtered_feature_bc_matrix/")
+dat.5C <- CreateSeuratObject(counts = data.5C,project = "5C")
+
+data.6C <- Read10X(data.dir = "6C_filtered_feature_bc_matrix/")
+dat.6C <- CreateSeuratObject(counts = data.6C,project = "6C")
+
+data.7C <- Read10X(data.dir = "7C_filtered_feature_bc_matrix/")
+dat.7C <- CreateSeuratObject(counts = data.7C,project = "7C")
+
+#Merging
+diff <- merge(dat.4C,y=c(dat.5C,dat.6C,dat.7C), add.cell.ids = c("4C","5C","6C","7C"),project = "diff")
+
+#Removing
+rm(data.4C,data.5C,data.6C,data.7C)
+rm(dat.4C,dat.5C,dat.6C,dat.7C)
+```
+
+Merging both datasets:
+```{r}
+#Merge
+sn.all <- merge(diff,naive)
+
+# removing datasets
+rm(diff)
+rm(naive)
+```
+
+Adding metadata:
+```{r}
+# Percent reads mitochondria
+sn.all[["percent.mt"]] <- PercentageFeatureSet(sn.all, pattern = "^mt-")
+
+# Adding temperature condition
+sn.all[["type"]] <- if_else(sn.all$orig.ident %in% c("12B","1C","2C","3C"),"37","39")
+head(sn.all@meta.data, 5)
+
+# Formatting gene annotations
+capwords <- function(s, strict = FALSE) {
+    cap <- function(s) paste(toupper(substring(s, 1, 1)),
+                  {s <- substring(s, 2); if(strict) tolower(s) else s},
+                             sep = "", collapse = " " )
+    sapply(strsplit(s, split = " "), cap, USE.NAMES = !is.null(names(s)))
+}
+
+s.genes <- capwords(tolower(cc.genes$s.genes))
+g2m.genes <- capwords(tolower(cc.genes$g2m.genes))
+
+sn.all <- CellCycleScoring(sn.all,s.features = s.genes, g2m.features = g2m.genes, set.ident = FALSE)
+```
+
+Filtering data:
+```{r}
+# Look at nfeatures, ncounts, and percent mt
+VlnPlot(sn.all,features = c("nFeature_RNA","nCount_RNA","percent.mt"),ncol = 3)
+
+plot1 <- FeatureScatter(sn.all, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(sn.all, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+CombinePlots(plots = list(plot1, plot2))
+
+# Set filtering parameters
+sn.all <- subset(sn.all, subset = nFeature_RNA > 200 & nFeature_RNA < 6000 & percent.mt < 15)
+sn.all
+```
+
+sctransform:
+```{r}
+sn.all_norm <- SCTransform(sn.all,
+            vst.flavor = "v2",
+            verbose = TRUE,
+            vars.to.regress = c("percent.mt","nCount_RNA"),
+            variable.features.n = 3000)
+sn.all <- SCTransform(sn.all,
+            verbose = TRUE,
+            vars.to.regress = c("percent.mt","nCount_RNA"),
+            variable.features.n = 3000)
+#Intentionally not regressing out the cell cycle so it can be visualized
+```
+
+Principle Component Analysis (PCA):
+```{r}
+sn.all_norm <- RunPCA(sn.all_norm, verbose = TRUE,features = VariableFeatures(sn.all_norm))
+ElbowPlot(sn.all_norm,ndims = 50)
+DimPlot(sn.all_norm, label = TRUE,group.by = "orig.ident",reduction = "pca") + NoLegend()
+
+sn.all <- RunPCA(sn.all, verbose = TRUE,features = VariableFeatures(sn.all))
+ElbowPlot(sn.all,ndims = 50)
+DimPlot(sn.all, label = TRUE,group.by = "orig.ident",reduction = "pca") + NoLegend()
+```
+
+Dimensionality Reduction (UMAP):
+```{r}
+sn.all_norm <- RunUMAP(sn.all_norm, dims = 1:8, verbose = TRUE,min.dist = 0.001)
+# tried dims 1:10, 1:9, 1:8, and 1:7 - 1:8 is better
+DimPlot(sn.all_norm, label = TRUE,group.by = "Phase",reduction = "umap")
+DimPlot(sn.all_norm, label = TRUE,group.by = "orig.ident",reduction = "umap")
+
+sn.all_norm <- FindNeighbors(sn.all_norm, dims = 1:8, verbose = TRUE)
+sn.all_norm <- FindClusters(sn.all_norm, verbose = TRUE,resolution = 0.5)
+
+DimPlot(sn.all_norm, label = TRUE,group.by = "seurat_clusters",reduction = "umap")
+# Also looked at all this with sctransform v1, and the v2 tended to cluster better
+
+# Save results
+saveRDS(sn.all_norm,file = "snAll.Rds")
+```
+
+Plotting:
+```{r}
+#Loading data
+sn.all_norm <- readRDS("snAll.Rds")
+
+#Making sure cell cycle phases are ordered in a logical way
+sn.all_norm@meta.data$Phase <- factor(sn.all_norm@meta.data$Phase, levels = c("G1","S","G2M"))
+
+#Making UMAP plots
+sample.umap <- DimPlot(sn.all_norm, label = FALSE,group.by = "orig.ident",reduction = "umap") +
+  ggtitle("Sample") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  BoldTitle()
+temp.umap <- DimPlot(sn.all_norm, label = FALSE,group.by = "type",reduction = "umap") +
+  ggtitle("Temperature") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  BoldTitle()
+phase.umap <- DimPlot(sn.all_norm, label = FALSE,group.by = "Phase",reduction = "umap") +
+  ggtitle("Cell-cycle Phase") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  BoldTitle()
+
+#Plotting all UMAPs grouped by sample, temperature, and cell-cycle phase on one plot
+library(tidyverse)
+library(patchwork)
+all.umap <- sample.umap + temp.umap + phase.umap
+ggsave("all_umap.pdf",plot = all.umap,width = 14,height = 4)
+
+#UMAP plot grouped by Phase and split by temperature to show that each temperature is dominated by a specific phase.
+phase.split <- DimPlot(sn.all_norm, label = FALSE,group.by = "Phase",split.by = "type",reduction = "umap") +
+  ggtitle("Cell-cycle Phase") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  BoldTitle()
+ggsave("phase-split_umap.pdf",plot = phase.split,width = 8,height = 4)
+
+#Violin plots for phase marker (Mki67) and neuronal precursor marker (Nestin) grouped by temp
+mki67.temp <- VlnPlot(sn.all_norm, features = "Mki67",log = TRUE,pt.size = 0,group.by = "type",assay = "RNA") + theme(plot.title = element_text(hjust = 0.5))
+nes.temp <- VlnPlot(sn.all_norm, features = "Nes",log = TRUE,pt.size = 0,group.by = "type",assay = "RNA") + theme(plot.title = element_text(hjust = 0.5))
+vln.temp <- mki67.temp + nes.temp & labs(y="Log Expression Levels") & theme(axis.title.x = element_blank())
+ggsave("phase-vln-mki_nes.pdf",plot = vln.temp,width = 8,height = 4)
+
+#Violin plots for phase marker (Mki67) and neuronal precursor marker (Nestin) grouped by Phase with boxplots
+mki67.phase.box <- VlnPlot(sn.all_norm, features = "Mki67",log = TRUE,pt.size = 0,group.by = "Phase",assay = "RNA") + theme(plot.title = element_text(hjust = 0.5)) + geom_boxplot(width=0.075,fill="grey")
+nes.phase.box <- VlnPlot(sn.all_norm, features = "Nes",log = TRUE,pt.size = 0,group.by = "Phase",assay = "RNA") + theme(plot.title = element_text(hjust = 0.5)) + geom_boxplot(width=0.075,fill="grey")
+vln.phase.box <- mki67.phase.box + nes.phase.box & labs(y="Log Expression Levels") & theme(axis.title.x = element_blank())
+#ggsave("phase-vln-nes-BOX.pdf",plot = vln.phase.box,width = 8,height = 4)
+
+#Violin plots for select DA markers grouped by temperature
+da.markers <- VlnPlot(sn.all_norm, features = c("Aldh1a1","Foxa2","Lmx1b","Nr4a2","Pitx3","Slc6a3","Th"),log = TRUE,pt.size = 0,group.by = "type",assay = "RNA",ncol = 4) & labs(y="Log (Expression Levels)") & theme(axis.title.x = element_blank())
+ggsave("da-markers-vln2.pdf",plot = da.markers,width = 10,height = 5)
+```
+
+Differential Expression:
+```{r}
+sn.all_norm$celltype.stim <- paste(sn.all_norm$type)
+Idents(sn.all_norm) <- "celltype.stim"
+
+DE_RNA <- FindMarkers(sn.all_norm, assay = "RNA", ident.1 = "37", ident.2 = "39", min.diff.pct = 0.2, verbose = FALSE)
+
+DE <- FindMarkers(sn.all_norm, assay = "SCT", ident.1 = "37", ident.2 = "39", min.diff.pct = 0.2, verbose = FALSE)
+
+DE_RNA39 <- FindMarkers(sn.all_norm, assay = "RNA", ident.1 = "39", ident.2 = "37", min.diff.pct = 0.2, verbose = FALSE)
+
+DE39 <- FindMarkers(sn.all_norm, assay = "SCT", ident.1 = "39", ident.2 = "37", min.diff.pct = 0.2, verbose = FALSE)
+
+# Up-regulated:
+DEup <- DE_RNA39 %>% filter(avg_log2FC > 0.5)
+upgenes <- row.names(DEup)
+write.table(upgenes, "Upregulated_sc_genes_for_GO.txt", quote = F, row.names = F, col.names = F)
+
+# Down-regulated:
+DEdown <- DE_RNA39 %>% filter(avg_log2FC < -0.5)
+downgenes <- row.names(DEdown)
+write.table(downgenes, "downregulated_sc_genes_for_GO.txt", quote = F, row.names = F, col.names = F)
+```
+
+Violin Plots for DE genes:
+```{r}
+upreg.genes <- VlnPlot(sn.all_norm, features = c("Celf5","Id2","Hmga2","Irx3","Scn1b","Cdh13"),log = TRUE,pt.size = 0,group.by = "type",assay = "RNA",ncol = 4) & labs(y="Log (Expression Levels)") & theme(axis.title.x = element_blank())
+ggsave("upregulatedgenes.pdf",plot = upreg.genes,width = 10,height = 5)
+```
+
+
