@@ -30,7 +30,7 @@ library(ggplot2)
 Loading Data:
 ```{r}
 #set working directory:
-setwd("C:/Users/rboyd25/OneDrive - Johns Hopkins/Documents/Hopkins/McCallion/Papers/SN4741/Bulk_RNAseq")
+setwd("<C:/path/to/file>")
 
 #read count matrix:
 mat <- read_tsv("gencode.vM24.counts", skip = 1)
