@@ -30,7 +30,7 @@ library(ggplot2)
 Loading Data:
 ```{r}
 #set working directory:
-setwd("<C:/path/to/file>")
+setwd("Z:/rboyd/McCallion Lab/Papers/SN4741/For_github/bulk_RNA-seq")
 
 #read count matrix:
 mat <- read_tsv("gencode.vM24.counts", skip = 1)
@@ -162,61 +162,6 @@ heatmap.2(sampleDistMatrix,
 dev.off()
 ```
 
-
-Correlation Heatmap:
-```{r}
-# Format Data
-counts <- counts(dds)
-cormatrix <- round(cor(counts, method = "spearman"),2)
-head(cormatrix)
-
-library(reshape2)
-melted_cormatrix <- melt(cormatrix)
-head(melted_cormatrix)
-
-# Get lower triangle of the correlation matrix
-  get_lower_tri<-function(cormatrix){
-    cormatrix[upper.tri(cormatrix)] <- NA
-    return(cormatrix)
-  }
-
-# Get upper triangle of the correlation matrix
-  get_upper_tri <- function(cormatrix){
-    cormatrix[lower.tri(cormatrix)]<- NA
-    return(cormatrix)
-  } 
-  upper_tri <- get_upper_tri(cormatrix)
-
-melted_cormatrix <- melt(upper_tri, na.rm = TRUE)
-melted_cormatrix$Var1<-as.character(melted_cormatrix$Var1)
-melted_cormatrix$Var2<-as.character(melted_cormatrix$Var2)
-
-ggheatmap <- ggplot(melted_cormatrix, aes(Var2, Var1, fill = value))+
- geom_tile(color = "white")+
- scale_fill_gradient2(low = "#ecca00", high = "#ec2400", mid = "#ec5300",
- midpoint = 0.95, limit = c(0.9,1), space = "Lab",
- name="Pearson\nCorrelation") +
-  theme_minimal()+
- theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-    size = 12, hjust = 1),axis.text.y = element_text(vjust = 1, 
-    size = 12, hjust = 1))+
- coord_fixed()
-
-Bulk_corrplot <- ggheatmap + 
-geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
-theme(
-  axis.title.x = element_blank(),
-  axis.title.y = element_blank(),
-  panel.grid.major = element_blank(),
-  panel.border = element_rect(colour = "black", fill = NA, size = 1),
-  panel.background = element_blank(),
-  axis.ticks = element_blank(),
-  legend.justification = c(1, 0),
-  legend.position = c(0.4, 0.5))
-
-ggsave('bulkRNA_Corrplot.pdf', width = 7, height = 6, Bulk_corrplot, bg='transparent')
-```
-
 Pre-Filtering:
 ```{r}
 #Filter dds to include only rows with an average of at least 1 read for each sample
@@ -225,7 +170,6 @@ dds.data.filt
 
 #Makes 37 the reference temp
 dds.data.filt$temp<- relevel(dds.data.filt$temp, ref = "37") 
-dds.data.filt2$temp<- relevel(dds.data.filt2$temp, ref = "37") 
 ```
 
 
@@ -237,7 +181,6 @@ Differential Expression Analysis (operates on raw counts):
 ```{r}
 # DEseq with untransformed data:
 dds.data.filt <- DESeq(dds.data.filt)
-
 ```
 
 
@@ -542,6 +485,7 @@ upgo <- up_GO %>% mutate(Term = fct_reorder(Term, Score)) %>%
 ggsave('GO_upreg_bar.pdf', width = 10, height = 8, upgo, bg='transparent')
 ```
 
+
 Converting Counts to RPKM for Comparison with E15.5 MB/FB RPKM (McClymont et al., 2018):
 ```{r}
 # Calculate per million scaling factor:
@@ -567,27 +511,24 @@ mat.rpkm$`39.4` <- (mat.final$`39.4`/scale39.4)
 
 #Divide the RPM values by the length of the gene, in kilobases. This gives you RPKM.
 mat.rpkm[,5:12] <- mat.rpkm[,5:12]/mat.rpkm$Length
-
-#Average RPKM for each temperature
 mat.rpkm2 <- mat.rpkm
-mat.rpkm2$rpkm.mean.37 <- rowMeans(mat.rpkm[ , c(5:8)], na.rm=TRUE)
-mat.rpkm2$rpkm.mean.39 <- rowMeans(mat.rpkm[ , c(9:12)], na.rm=TRUE)
 
 # Format mat.rpkm for merging:
-temp1 = str_split_fixed(mat.rpkm$Geneid, "\\.", 2)
-mat.rpkm3 <- mat.rpkm2[,-2:-12]
-mat.rpkm3$Geneid <- temp1[,1]
-colnames(mat.rpkm3)[colnames(mat.rpkm3) == "Geneid"] = "GeneID"
+temp1 <- str_split_fixed(mat.rpkm$Geneid, "\\.", 2)
+mat.rpkm$Geneid <- temp1[,1]
+colnames(mat.rpkm)[colnames(mat.rpkm) == "Geneid"] = "GeneID"
+mat.rpkm <- mat.rpkm[,-2:-4]
 
-#Feed in FB and MB RPKM:
-MB.FB.rpkm <- read_tsv("E15.5_MB_FB_All.RPKM.txt")
+#Feed in FB/MB RPKM:
+MB.FB.rpkm <- read_tsv("gencode.vM9_rpkm.txt")
+MB.FB.rpkm <- MB.FB.rpkm[,-2:-5]
 
 # Merge:
-RPKM.corr <- merge(x=mat.rpkm3,y=MB.FB.rpkm,by="GeneID",all=TRUE)
+RPKM.corr <- merge(x=mat.rpkm,y=MB.FB.rpkm,by="GeneID",all=TRUE)
 RPKM.corr[is.na(RPKM.corr)] <- 0 
 
 # Generate Correlation HeatMap:
-RPKMcormatrix <- round(cor(RPKM.corr[,2:5], method = "spearman"),2)
+RPKMcormatrix <- round(cor(RPKM.corr[,2:17], method = "spearman"),2)
 head(RPKMcormatrix)
 
 melted_RPKMcormatrix <- melt(RPKMcormatrix)
@@ -613,16 +554,16 @@ melted_RPKMcormatrix$Var2<-as.character(melted_RPKMcormatrix$Var2)
 RPKMheatmap <- ggplot(melted_RPKMcormatrix, aes(Var2, Var1, fill = value))+
  geom_tile(color = "white")+
  scale_fill_gradient2(low = "blue", high = "red", mid = "yellow", 
-   midpoint = 0.77, limit = c(0.56,1), space = "Lab", 
- name="Pearson\nCorrelation") +
+                      midpoint = 0.8, limit = c(0.6,1), 
+                      space = "Lab",name="Pearson\nCorrelation") +
+  scale_y_discrete(position = "right")+
   theme_minimal()+
- theme(axis.text.x = element_text(angle = 45, vjust = 1, 
-    size = 12, hjust = 1),axis.text.y = element_text(vjust = 1, 
-    size = 12, hjust = 1))+
+ theme(axis.text.x = element_text(angle = 90, vjust = 1, size = 12, hjust = 1),
+       axis.text.y = element_text(vjust = 1,size = 12, hjust = 1))+
  coord_fixed()
 
 RPKM_corrplot <- RPKMheatmap + 
-geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+geom_text(aes(Var2, Var1, label = value), color = "black", size = 2.5) +
 theme(
   axis.title.x = element_blank(),
   axis.title.y = element_blank(),
@@ -631,8 +572,218 @@ theme(
   panel.background = element_blank(),
   axis.ticks = element_blank(),
   legend.justification = c(1, 0),
-  legend.position = c(1.3, 0))
+  legend.position = c(0.3, 0.5))
 
 ggsave('MB.FB.SN4741.RNA_Corrplot.pdf', width = 7, height = 6, RPKM_corrplot, bg='transparent')
 ```
 
+Bar Plot for read counts from GO contributing genes
+```{r}
+# Format Dataset
+GO_dat <- mat.rpkm2
+GO_dat <- GO_dat[,-c(1,3,4,13)]
+library(reshape2)
+library(ggpubr)
+melt_GOdat <- melt(GO_dat)
+
+#Cell type UP in 39 (immature neurons)
+# NTRK1;UNC13A;CADM2;NRXN1;RAX;CACNA1B;CELF5;TMEM179;CUX2;DPYSL5;ADGRB3;NOVA2;CNTN2;SCN3B;GPM6B;SOX5
+
+cbPalette <- c("#f8766dff","#f8766dff","#f8766dff","#f8766dff",
+"#00bfc4ff","#00bfc4ff","#00bfc4ff","#00bfc4ff")
+
+Ntrk1.plot <- ggplot(subset(melt_GOdat, symbol %in% "Ntrk1"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Ntrk1")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Unc13a.plot <- ggplot(subset(melt_GOdat, symbol %in% "Unc13a"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Unc13a")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Nrxn1.plot <- ggplot(subset(melt_GOdat, symbol %in% "Nrxn1"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Nrxn1")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Celf5.plot <- ggplot(subset(melt_GOdat, symbol %in% "Celf5"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Celf5")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+immneuron_UP <- ggarrange(Celf5.plot, Nrxn1.plot, Ntrk1.plot,Unc13a.plot, nrow=1)
+ggsave('immneuronUP.pdf', width = 20, height = 5, immneuron_UP, bg='transparent')
+
+
+#Cell type UP in 39 (oligodendrocytes)
+# PTPRT;IL33;OLIG3;ARRDC2;NRXN1;HDAC11;DUSP15;SRCIN1;NIPAL4;EFNB3;PSD2;SEC14L5;ENPP2;CNTN2;SP7;PTGDS;GPM6B
+
+Olig3.plot <- ggplot(subset(melt_GOdat, symbol %in% "Olig3"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Olig3")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Il33.plot <- ggplot(subset(melt_GOdat, symbol %in% "Il33"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Il33")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+
+Ptgds.plot <- ggplot(subset(melt_GOdat, symbol %in% "Ptgds"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Ptgds")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Hdac11.plot <- ggplot(subset(melt_GOdat, symbol %in% "Hdac11"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("Read Count")+
+  labs(title = "Hdac11")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Olig_UP <- ggarrange(Olig3.plot, Il33.plot, Hdac11.plot, Ptgds.plot, nrow=1)
+ggsave('OligUP.pdf', width = 20, height = 5, Olig_UP, bg='transparent')
+
+# Cell type DOWN in 39
+Cdc6.plot <- ggplot(subset(melt_GOdat, symbol %in% "Cdc6"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Cdc6")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Gins1.plot <- ggplot(subset(melt_GOdat, symbol %in% "Gins1"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Gins1")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Cenpf.plot <- ggplot(subset(melt_GOdat, symbol %in% "Cenpf"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Cenpf")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+Ccna2.plot <- ggplot(subset(melt_GOdat, symbol %in% "Ccna2"), aes(x=variable, y=value, fill=variable))+
+  geom_bar(stat="identity", fill=cbPalette)+
+  xlab("")+
+  ylab("RPKM")+
+  labs(title = "Ccna2")+ 
+  scale_y_continuous(expand = expansion(mult = c(0,0.1)))+
+  theme_classic()+
+  theme(
+    legend.position = "none",
+    plot.margin = unit(c(1, 1, 3, 1), "lines"),
+  axis.text.y = element_text(size = 14, color = "black"),
+  axis.text.x = element_text(size = 14, color = "black"),
+  axis.title.y = element_text(size = 18),
+  plot.title=element_text(face="bold.italic", size=18, hjust=0.5))
+
+pluri_DOWN <- ggarrange(Ccna2.plot, Cdc6.plot, Cenpf.plot, Gins1.plot, nrow=1)
+ggsave('Pluri_DOWN.pdf', width = 20, height = 5, pluri_DOWN, bg='transparent')
+```
